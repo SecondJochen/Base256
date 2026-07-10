@@ -1,8 +1,11 @@
 # Addition
-The addition algorithm uses a `uint16_t` accumulator to detect overflows beyond the 8-bit boundary (255).
+The addition algorithm operates in Base $2^{64}$, using 64-bit unsigned integers (`uint64_t`) to represent each limb of the arbitrary-precision integer. Overflows beyond the 64-bit boundary are detected using standard unsigned arithmetic comparisons.
 
-1. **Iteration:** The algorithm traverses from the LSB (`index 0`) to the MSB (`index N`).
-2. **Carry Propagation:** For each byte, represented by `i`, it calculates:
-   `sum = a[i] + b[i] + carry`
-3. **Overflow Handling:** The carry for the next iteration is determined by `sum >> 8`. The digit stored in the current position is determined by `sum & 0xFF`.
-4. **Finalization:** If a carry remains after the final byte is processed, an additional byte is pushed to the vector, extending the total magnitude of the number.
+1. **Iteration:** The algorithm traverses from the least significant limb (LSB, `index 0`) to the most significant limb (MSB, `index N`).
+2. **Carry Propagation:** For each limb, represented by `i`, it calculates:
+   `sum = aVal + bVal`
+   An overflow is detected if the intermediate `sum` is smaller than `aVal`.
+3. **Carry Handling:**
+   * The carry for the next iteration (`nextCarry`) is initially flagged as `1` if an overflow occurred in the initial sum.
+   * The carry from the previous iteration is then added to the `sum`. If this addition causes a secondary overflow (detected by checking `sum < carry`), `nextCarry` is incremented.
+4. **Finalization:** If a carry remains after the final limb is processed, an additional limb containing the value `1` is appended to the vector. Finally, the vector is normalized to prune trailing zeros.
